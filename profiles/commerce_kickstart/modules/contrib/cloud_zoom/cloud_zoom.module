@@ -1,5 +1,4 @@
 <?php
-// $Id: cloud_zoom.module,v 1.3 2010/06/04 21:00:25 njt1982 Exp $
 
 /**
  * @file
@@ -7,23 +6,8 @@
  * http://www.professorcloud.com/mainsite/cloud-zoom.htm
  */
 
-/**
- * Implementation of hook_requirements().
- */
-function cloud_zoom_requirements($phase) {
-  if ($phase == 'runtime') {
-    $files_present = _cloud_zoom_get_path();
+define('CLOUD_ZOOM_DOWNLOAD_URI', 'http://www.professorcloud.com/downloads/cloud-zoom.1.0.3.zip');
 
-    return array(
-      'cloud_zoom_sourcefiles' => array(
-        'title' => t('Cloud Zoom - Sourcecode downloaded and present'),
-        'value' => $files_present ? t('Files Present') : t('Files Missing'),
-        'description' => $files_present ? NULL : t('Have the sourcecode files for Cloud Zoom been downloaded from <a href="http://www.professorcloud.com/mainsite/cloud-zoom.htm">Professor Cloud</a>'),
-        'severity' => $files_present ? REQUIREMENT_OK : REQUIREMENT_ERROR,
-      ),
-    );
-  }
-}
 
 /**
  * Implements hook_libraries_info().
@@ -32,10 +16,79 @@ function cloud_zoom_libraries_info() {
   $libraries['cloud-zoom'] = array(
     'name' => 'Cloud Zoom',
     'vendor url' => 'http://www.professorcloud.com/mainsite/cloud-zoom.htm',
-    'download url' => 'http://www.professorcloud.com/downloads/cloud-zoom.1.0.2.zip',
+    'download url' => CLOUD_ZOOM_DOWNLOAD_URI,
   );
   return $libraries;
 }
+
+
+/**
+ * Implements hook_library()
+ */
+function cloud_zoom_library() {
+  if ($path = _cloud_zoom_get_path()) {
+    $module_path = drupal_get_path('module', 'cloud_zoom');
+    $library = _cloud_zoom_check_path($path);
+    $library_base = basename($library->uri);
+
+    return array(
+      'cloud-zoom' => array(
+        'title' => 'Cloud Zoom',
+        'website' => 'http://www.professorcloud.com/mainsite/cloud-zoom.htm',
+        'version' => $library->cz_version,
+        'js' => array(
+          $library->uri => array('group' => JS_LIBRARY),
+          $module_path .'/js/cloud_zoom.js' => array(),
+        ),
+        'css' => array(
+          $library_base .'/cloud-zoom.css' => array('group' => JS_LIBRARY),
+          $module_path .'/css/cloud_zoom.css' => array(),
+        ),
+        'dependencies' => array(
+          array('system', 'jquery'),
+        ),
+      ),
+    );
+  }
+  return;
+}
+
+
+/**
+ * Internal function for checking for the cloud zoom JS in a path
+ */
+function _cloud_zoom_check_path($path) {
+  // Use advanged static caching
+  static $cache;
+  if (!isset($cache)) {
+    $cache['paths'] = &drupal_static(__FUNCTION__);
+  }
+
+  // If this path hasn't been checked, check it now.
+  if (!isset($cache['paths'][$path])) {
+    // Scan the path for the file pattern
+    if ($file = file_scan_directory($path, '/cloud-zoom\..+\.min\.js/')) {
+      // If found, shift the entry out of the single-item (hopefully) array.
+      $file = array_shift($file);
+
+      // Now parse the JS for version
+      $content = file_get_contents($file->uri);
+      preg_match('#Cloud Zoom V(?P<version>[0-9\.]+)#', $content, $matches);
+      $file->cz_version = isset($matches['version']) ? $matches['version'] : FALSE;
+
+      // Store it in the cache
+      $cache['paths'][$path] = $file;
+    }
+    else {
+      // No JS foundm store false so its statically cached
+      $cache['paths'][$path] = FALSE;
+    }
+  }
+
+  // Return the item from the cache
+  return $cache['paths'][$path];
+}
+
 
 /**
  * Retrieve the expected path to the example library.
@@ -45,26 +98,50 @@ function cloud_zoom_libraries_info() {
  *   Returns FALSE if the library is not found.
  */
 function _cloud_zoom_get_path() {
+  static $path = NULL;
+
+  if (isset($path)) {
+    return $path;
+  }
+
   $path = FALSE;
 
-  // Check if the libraries module is installed.
+  // Check if the libraries module is installed and if the example library is
+  // being supplied through the libraries module.
   if (module_exists('libraries')) {
     // Check if the library is found. If no library is found libraries_get_path()
     // will still return sites/all/libraries as a path.
     $libraries = libraries_get_libraries();
     if (isset($libraries['cloud-zoom'])) {
-      $path = libraries_get_path('cloud-zoom');
+      $libraries_path = libraries_get_path('cloud-zoom');
+      if (_cloud_zoom_check_path($libraries_path)) {
+        $path = $libraries_path;
+      }
     }
   }
-  // Check in the cloud-zoom directory within the module directory, for backword
-  // compatibility.
+
+  // Check in the cloud-zoom directory within the module directory.
   if (!$path) {
     $module_path = drupal_get_path('module', 'cloud_zoom') .'/cloud-zoom';
-    $path = file_exists($module_path . '/cloud-zoom.1.0.2.min.js') && file_exists($module_path .'/cloud-zoom.css') ? $module_path : FALSE;
+    if (_cloud_zoom_check_path($module_path)) {
+      $path = $module_path;
+    }
+  }
+
+  // Check if the example library is in the include path.
+  if (!$path) {
+    $include_paths = explode(PATH_SEPARATOR, get_include_path());
+      foreach ($include_paths as $include_path) {
+        if (is_dir($include_path .'/example')) {
+          $path = $include_path .'/example';
+          continue;
+        }
+      }
   }
 
   return $path;
 }
+
 
 /**
  * Get all Cloud zoom settings info.
@@ -242,11 +319,14 @@ function cloud_zoom_settings_info() {
   return $settings;
 }
 
+
+
 /**
- * Implements hook_field_formatter().
+ * Implements hook_field_formatter()
  */
 function cloud_zoom_field_formatter_info() {
   $formatters = array();
+
   $cloud_zoom_settings = cloud_zoom_settings_info('default_value');
   $default_settings = array();
   // Return a single depth array with the given key as value.
@@ -267,6 +347,7 @@ function cloud_zoom_field_formatter_info() {
 
   return $formatters;
 }
+
 
 /**
  * Implements hook_field_formatter_settings_form().
@@ -343,6 +424,8 @@ function cloud_zoom_field_formatter_settings_summary($field, $instance, $view_mo
   return implode ('<br />', $summary);
 }
 
+
+
 /**
  * Implements hook_field_formatter_view().
  */
@@ -384,7 +467,6 @@ function cloud_zoom_field_formatter_view($entity_type, $entity, $field, $instanc
  * Implementation of hook_theme().
  */
 function cloud_zoom_theme() {
-  // Define a base theme handler
   $theme_info = array(
     'cloud_zoom_image' => array(
       'variables' => array(
@@ -397,6 +479,7 @@ function cloud_zoom_theme() {
       ),
     ),
   );
+
   // Pass default settings values.
   $cloud_zoom_settings = cloud_zoom_settings_info('default_value');
   $theme_info['cloud_zoom_image']['variables'] +=  $cloud_zoom_settings;
@@ -405,17 +488,6 @@ function cloud_zoom_theme() {
   return $theme_info;
 }
 
-/**
- * Include cloud zoom library.
- */
-function cloud_zoom_include() {
-  // Add the cloud zoom JS and CSS
-  $path = _cloud_zoom_get_path();
-  drupal_add_js($path . '/cloud-zoom.1.0.2.min.js');
-  drupal_add_css($path . '/cloud-zoom.css');
-  drupal_add_js(drupal_get_path('module', 'cloud_zoom') .'/js/cloud_zoom.js');
-  drupal_add_css(drupal_get_path('module', 'cloud_zoom') .'/css/cloud_zoom.css');
-}
 
 /**
  * Build rel string.
@@ -435,6 +507,7 @@ function cloud_zoom_get_rel_string($variables) {
   return $output;
 }
 
+
 /**
  * Get rendered img tag.
  */
@@ -453,26 +526,37 @@ function cloud_zoom_get_img_tag($style_name, $item) {
   return !empty($style_name) ? theme('image_style', $image) : theme('image', $image);
 }
 
+
 /**
- * Theme for the Cloud zoom effect with no gallery.
+ * Theme handler for the cloud_zoom (no gallery)
  */
 function theme_cloud_zoom_image($variables) {
-  cloud_zoom_include();
+  // Add the Cloud Zoom Library
+  drupal_add_library('cloud_zoom', 'cloud-zoom');
+
   $item = $variables['item'];
+
   $slide = cloud_zoom_get_img_tag($variables['slide_style'], $item);
+
   // Build a Zoomed In URL path
   $zoomed = $variables['zoom_style'] ? image_style_url($variables['zoom_style'], $item['uri']) : file_create_url($item['uri']);
   $rel = cloud_zoom_get_rel_string($variables);
 
+
+  // Return the preview image as a link to the larger image with a cloud-zoom CSS class
   return l($slide, $zoomed, array('html' => TRUE, 'attributes' => array('class' => 'cloud-zoom', 'rel' => $rel)));
 }
+
 
 /**
  * Theme handler for the cloud_zoom effect with gallery
  */
 function theme_cloud_zoom_image_gallery($variables) {
-  cloud_zoom_include();
+  // Add the Cloud Zoom Library
+  drupal_add_library('cloud_zoom', 'cloud-zoom');
+
   $items = $variables['items'];
+
   // Create the gallery thumb syntax of cloud zoom.
   $gallery_item = '<div class="cloud-zoom-gallery-thumbs">';
   $options_rel = cloud_zoom_get_rel_string($variables);
@@ -517,4 +601,3 @@ function theme_cloud_zoom_image_gallery($variables) {
   // CSS class.
   return '<div class="cloud-zoom-container">' . $main_item . $gallery_item . '</div>';
 }
-

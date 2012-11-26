@@ -70,15 +70,17 @@ function commerce_product_reference_field_extra_fields() {
           }
         }
 
-        // Referenceable product types for the field instance
+        // Do the same for fields on products that may be visible on the bundle.
+        // First build a list of product types that may be referenced.
         $field_instance = field_info_instance($entity_type, $field_name, $bundle_name);
         $product_types = array_filter($field_instance['settings']['referenceable_types']);
+
+        // If no product types are specified, use all product types.
         if (empty($product_types)) {
-          // No product types specified to be referenced. Use all product types.
-          $product_types = array_keys($field_instance['settings']['referenceable_types']);
+          $product_types = array_keys(commerce_product_types());
         }
+
         foreach ($product_types as $product_type) {
-          // Do the same for fields on products that may be visible on the bundle.
           foreach (field_info_instances('commerce_product', $product_type) as $product_field_name => $product_field) {
             $extra[$entity_type][$bundle_name]['display']['product:' . $product_field_name] = array(
               'label' => t('Product: @label', array('@label' => $product_field['label'])),
@@ -296,8 +298,11 @@ function commerce_product_reference_commerce_product_delete($product) {
  * display if the product contains a non-empty product reference field.
  */
 function commerce_product_reference_entity_view($entity, $entity_type, $view_mode, $langcode) {
-  $wrapper = entity_metadata_wrapper($entity_type, $entity);
   list($id, $vid, $bundle) = entity_extract_ids($entity_type, $entity);
+
+  // An entity metadata wrapper will be loaded on demand if it is determined
+  // this entity has a product reference field instance attached to it.
+  $wrapper = NULL;
 
   $instances = field_info_instances($entity_type, $bundle);
   $reference_view_mode = $entity_type . '_' . $view_mode;
@@ -307,6 +312,11 @@ function commerce_product_reference_entity_view($entity, $entity_type, $view_mod
   // formatter.
   foreach (commerce_info_fields('commerce_product_reference', $entity_type) as $field_name => $field) {
     if (isset($instances[$field_name])) {
+      // Load a wrapper for the entity being viewed.
+      if (empty($wrapper)) {
+        $wrapper = entity_metadata_wrapper($entity_type, $entity);
+      }
+
       // Find the default product based on the cardinality of the field.
       if ($field['cardinality'] == 1) {
         $product = $wrapper->{$field_name}->value();
@@ -333,6 +343,8 @@ function commerce_product_reference_entity_view($entity, $entity_type, $view_mod
         $product->display_context = array(
           'entity_type' => $entity_type,
           'entity' => $entity,
+          'view_mode' => $reference_view_mode,
+          'language' => $langcode,
         );
 
         // Loop through the fields on the referenced product's type.
@@ -576,7 +588,128 @@ function commerce_product_reference_field_formatter_info() {
       'description' => t('Display the title of the referenced product as plain text.'),
       'field types' => array('commerce_product_reference'),
     ),
+    'commerce_product_reference_rendered_product' => array(
+      'label' => t('Rendered product'),
+      'description' => t('Display the rendered products in any available view mode.'),
+      'field types' => array('commerce_product_reference'),
+      'settings' => array(
+        'view_mode' => 'full',
+        'page' => TRUE,
+      ),
+    ),
   );
+}
+
+/**
+ * Implements hook_field_formatter_settings_form().
+ */
+function commerce_product_reference_field_formatter_settings_form($field, $instance, $view_mode, $form, &$form_state) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  if ($display['type'] == 'commerce_product_reference_rendered_product') {
+    $entity_info = entity_get_info('commerce_product');
+    $options = array();
+
+    if (!empty($entity_info['view modes'])) {
+      foreach ($entity_info['view modes'] as $view_mode => $view_mode_settings) {
+        $options[$view_mode] = $view_mode_settings['label'];
+      }
+    }
+
+    if (count($options) > 1) {
+      $element['view_mode'] = array(
+        '#type' => 'select',
+        '#title' => t('View mode'),
+        '#options' => $options,
+        '#default_value' => $settings['view_mode'],
+      );
+    }
+
+    $element['page'] = array(
+      '#type' => 'checkbox',
+      '#title' => t('Render the product in full page mode without the title in a heading tag.'),
+      '#default_value' => $settings['page'],
+    );
+  }
+
+  return $element;
+}
+
+/**
+ * Implements hook_field_formatter_settings_summary().
+ */
+function commerce_product_reference_field_formatter_settings_summary($field, $instance, $view_mode) {
+  $display = $instance['display'][$view_mode];
+  $settings = $display['settings'];
+
+  $summary = array();
+
+  if ($display['type'] == 'commerce_product_reference_rendered_product') {
+    $entity_info = entity_get_info('commerce_product');
+    $summary[] = t('View mode: @mode', array('@mode' => isset($entity_info['view modes'][$settings['view_mode']]['label']) ? $entity_info['view modes'][$settings['view_mode']]['label'] : $settings['view_mode']));
+
+    if (!empty($settings['page'])) {
+      $summary[] = t('Rendering without the title in a heading tag.');
+    }
+    else {
+      $summary[] = t('Rendering with the title in a heading tag.');
+    }
+  }
+
+  return implode('<br />', $summary);
+}
+
+/**
+ * Implements hook_field_formatter_prepare_view().
+ */
+function commerce_product_reference_field_formatter_prepare_view($entity_type, $entities, $field, $instances, $langcode, &$items, $displays) {
+  $display = reset($displays);
+
+  if ($display['type'] == 'commerce_product_reference_rendered_product') {
+    $product_ids = array();
+
+    // Collect every possible entity attached to any of the entities.
+    foreach ($entities as $id => $entity) {
+      foreach ($items[$id] as $delta => $item) {
+        if (isset($item['product_id'])) {
+          $product_ids[] = $item['product_id'];
+        }
+      }
+    }
+
+    if ($product_ids) {
+      $products = entity_load('commerce_product', $product_ids);
+    }
+    else {
+      $products = array();
+    }
+
+    // Iterate through the entities again to attach the loaded data.
+    foreach ($entities as $id => $entity) {
+      $rekey = FALSE;
+
+      foreach ($items[$id] as $delta => $item) {
+        // Check whether the referenced product could be loaded and that the
+        // user has access to it.
+        if (isset($products[$item['product_id']]) && entity_access('view', 'commerce_product', $products[$item['product_id']])) {
+          // Add the fully loaded entity to the items array.
+          $items[$id][$delta]['entity'] = $products[$item['product_id']];
+        }
+        else {
+          // Otherwise, unset the item since the referenced product does not
+          // exist or is not be accessible to the user.
+          unset($items[$id][$delta]);
+          $rekey = TRUE;
+        }
+      }
+
+      if ($rekey) {
+        // Rekey the items array.
+        $items[$id] = array_values($items[$id]);
+      }
+    }
+  }
 }
 
 /**
@@ -638,6 +771,23 @@ function commerce_product_reference_field_formatter_view($entity_type, $entity, 
             );
           }
         }
+      }
+      break;
+
+    case 'commerce_product_reference_rendered_product':
+      foreach ($items as $delta => $item) {
+        // Protect ourselves from recursive rendering.
+        static $depth = 0;
+        $depth++;
+
+        if ($depth > 20) {
+          throw new CommerceProductReferenceRecursiveRenderingException(t('Recursive rendering detected when rendering product (@product_id). Aborting rendering.', array('@product_id' => $item['product_id'])));
+        }
+
+        $entity = clone $item['entity'];
+        unset($entity->content);
+        $result[$delta] = entity_view('commerce_product', array($item['product_id'] => $entity), $display['settings']['view_mode'], $langcode, $display['settings']['page']);
+        $depth = 0;
       }
       break;
   }
@@ -859,17 +1009,21 @@ function commerce_product_reference_entity_info_alter(&$entity_info) {
   $query->join('field_config', 'fc', 'fc.id = fci.field_id');
   $query->fields('fci', array('entity_type'));
   $query->condition('fc.type', 'commerce_product_reference');
+  $query->condition('fc.deleted', 0);
   $query->distinct();
 
   foreach ($query->execute() as $instance) {
     $entity_type = $instance['entity_type'];
-    foreach ($entity_info[$entity_type]['view modes'] as $view_mode => $view_mode_info) {
-      $entity_info['commerce_product']['view modes'][$entity_type . '_' . $view_mode] = array(
-        'label' => t('@entity_type: @view_mode', array('@entity_type' => $entity_info[$entity_type]['label'], '@view_mode' => $view_mode_info['label'])),
 
-        // UX: Enable the 'Node: teaser' mode by default, if present.
-        'custom settings' => $entity_type == 'node' && $view_mode == 'teaser',
-      );
+    if (!empty($entity_info[$entity_type]['view modes'])) {
+      foreach ($entity_info[$entity_type]['view modes'] as $view_mode => $view_mode_info) {
+        $entity_info['commerce_product']['view modes'][$entity_type . '_' . $view_mode] = array(
+          'label' => t('@entity_type: @view_mode', array('@entity_type' => $entity_info[$entity_type]['label'], '@view_mode' => $view_mode_info['label'])),
+
+          // UX: Enable the 'Node: teaser' mode by default, if present.
+          'custom settings' => $entity_type == 'node' && $view_mode == 'teaser',
+        );
+      }
     }
   }
 }
@@ -1222,3 +1376,21 @@ function commerce_product_reference_node_types() {
   ksort($list);
   return $list;
 }
+
+/**
+ * Implements hook_preprocess_HOOK().
+ */
+function commerce_product_reference_preprocess_entity(&$variables) {
+  // @todo Remove this hook implementation when a new release is created for
+  // Entity API to fix the default $url variable in entity.tpl.php.
+  // @see http://drupal.org/node/1601162
+  if (!isset($variables['url'])) {
+    $variables['url'] = FALSE;
+  }
+}
+
+/**
+ * Exception thrown when the referenced product display formatter goes into a
+ * potentially infinite loop.
+ */
+class CommerceProductReferenceRecursiveRenderingException extends Exception {}

@@ -86,6 +86,10 @@ function commerce_kickstart_lite_product_strongarm() {
             'weight' => '0',
             'visible' => TRUE,
           ),
+          'add_to_cart_confirmation_view' => array(
+            'weight' => '1',
+            'visible' => TRUE,
+          ),
         ),
         'title' => array(
           'default' => array(
@@ -104,6 +108,10 @@ function commerce_kickstart_lite_product_strongarm() {
           ),
           'node_product_list' => array(
             'weight' => '4',
+            'visible' => FALSE,
+          ),
+          'add_to_cart_confirmation_view' => array(
+            'weight' => '2',
             'visible' => FALSE,
           ),
         ),
@@ -139,7 +147,11 @@ function commerce_kickstart_lite_product_strongarm() {
       'display' => array(
         'product:sku' => array(
           'default' => array(
-            'weight' => '5',
+            'weight' => '7',
+            'visible' => FALSE,
+          ),
+          'product_list' => array(
+            'weight' => '4',
             'visible' => FALSE,
           ),
         ),
@@ -151,20 +163,42 @@ function commerce_kickstart_lite_product_strongarm() {
         ),
         'product:status' => array(
           'default' => array(
-            'weight' => '7',
+            'weight' => '8',
+            'visible' => FALSE,
+          ),
+          'product_list' => array(
+            'weight' => '8',
             'visible' => FALSE,
           ),
         ),
         'product:commerce_price' => array(
           'default' => array(
-            'weight' => '0',
+            'weight' => '1',
+            'visible' => TRUE,
+          ),
+          'product_list' => array(
+            'weight' => '2',
             'visible' => TRUE,
           ),
         ),
         'product:field_images' => array(
           'default' => array(
-            'weight' => '3',
+            'weight' => '4',
             'visible' => TRUE,
+          ),
+          'product_list' => array(
+            'weight' => '0',
+            'visible' => TRUE,
+          ),
+        ),
+        'product:title_field' => array(
+          'product_list' => array(
+            'weight' => '3',
+            'visible' => FALSE,
+          ),
+          'default' => array(
+            'weight' => '5',
+            'visible' => FALSE,
           ),
         ),
       ),

@@ -98,6 +98,9 @@ class _taxonomy_CrumbsMultiPlugin_termReference_node extends _taxonomy_CrumbsMul
    */
   function findParent__node_x($path, $item) {
     $node = $item['map'][1];
+    // Load the node if it hasn't been loaded due to a missing wildcard loader.
+    $node = is_numeric($node) ? node_load($node) : $node;
+
     $parent_path = $this->_findParentPath($node);
     if ($parent_path) {
       return array($node->type => $parent_path);
@@ -115,6 +118,9 @@ class _taxonomy_CrumbsMultiPlugin_termReference_user extends _taxonomy_CrumbsMul
    */
   function findParent__user_x($path, $item) {
     $user = $item['map'][1];
+    // Load the user if it hasn't been loaded due to a missing wildcard loader.
+    $user = is_numeric($user) ? user_load($user) : $user;
+
     $parent_path = $this->_findParentPath($user);
     if ($parent_path) {
       // TODO: Is 'user' the correct bundle name?
@@ -134,6 +140,9 @@ class _taxonomy_CrumbsMultiPlugin_termReference_commerce_product extends _taxono
    */
   function findParent__product_x($path, $item) {
     $product = $item['map'][1];
+    // Load the product if it hasn't been loaded due to a missing wildcard loader.
+    $product = is_numeric($product) ? commerce_product_load($product) : $product;
+
     $parent_path = $this->_findParentPath($product);
     if ($parent_path) {
       // TODO: Is 'user' the correct bundle name?
@@ -162,11 +171,8 @@ class taxonomy_CrumbsMultiPlugin_termParent implements crumbs_MultiPlugin {
    */
   function findParent__taxonomy_term_x($path, $item) {
     $term = $item['map'][2];
-    // The menu item can contain only the term id if the "taxonomy/term/%" path
-    // is overriden by a View.
-    if (is_numeric($term)) {
-      $term = taxonomy_term_load($term);
-    }
+    // Load the term if it hasn't been loaded due to a missing wildcard loader.
+    $term = is_numeric($term) ? taxonomy_term_load($term) : $term;
 
     $parents = taxonomy_get_parents($term->tid);
     $result = array();
@@ -178,7 +184,3 @@ class taxonomy_CrumbsMultiPlugin_termParent implements crumbs_MultiPlugin {
     }
   }
 }
-
-
-
-

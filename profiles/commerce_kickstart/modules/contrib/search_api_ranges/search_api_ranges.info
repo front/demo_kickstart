@@ -6,12 +6,13 @@ dependencies[] = search_api_facetapi
 files[] = includes/callback_search_api_ranges.inc
 files[] = plugins/facetapi/widget_links.inc
 files[] = plugins/facetapi/widget_slider.inc
+files[] = plugins/facetapi/widget_select.inc
 core = 7.x
 package = Search
 
-; Information added by drupal.org packaging script on 2012-09-15
-version = "7.x-1.3+17-dev"
+; Information added by drupal.org packaging script on 2012-10-21
+version = "7.x-1.4"
 core = "7.x"
 project = "search_api_ranges"
-datestamp = "1347713932"
+datestamp = "1350817329"
 

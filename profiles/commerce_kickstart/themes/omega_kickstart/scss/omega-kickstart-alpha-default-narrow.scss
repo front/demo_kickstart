@@ -22,7 +22,7 @@
 * 3.2.2. Content
 *******************************************/
 #promotional_banner .promotional_banner_special_offer {
-  float: right;
+  float: right; /* LTR */
   line-height: 22px;
   margin-top: 4px;
 }
@@ -62,6 +62,7 @@
 /**********************************************
 * 5.1. Search & Collection page
 **********************************************/
+.view-collection-products .view-header .collection-terms .view-content .item-list,
 .view-collection-taxonomy-term .view-header .collection-terms .view-content .item-list {
   display: block;
   float: none;
@@ -70,13 +71,13 @@
 * 5.3. Product page
 **********************************************/
 .node-product-type {
-  .commerce-product-field .cloud-zoom-container {
+  .cloud-zoom-container {
     #wrap {
-      float: right;
+      float: right !important; /* LTR */
     }
     .cloud-zoom-gallery-thumbs {
-      /*float: left;*/
       clear: none;
+      float: none !important;
       .cloud-zoom-gallery {
         margin: 5px;
       }

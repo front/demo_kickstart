@@ -1,5 +1,5 @@
-@import url(//fonts.googleapis.com/css?family=Open+Sans:400,700,300,600,800);
-@import url(//fonts.googleapis.com/css?family=Gentium+Basic:400,700);
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,700,300,600,800);
+@import url(http://fonts.googleapis.com/css?family=Gentium+Basic:400,700);
 /* Include Default Variables & Mixins */
 /* End Variables & Mixins */
 /**************************************************
@@ -30,13 +30,16 @@
   clear: both; }
   .zone-branding .region-branding .logo-img {
     float: left;
-    text-align: left; }
+    /* LTR */
+    text-align: left;
+    /* LTR */ }
 
 /**
 * Search block
 */
 #block-views-exp-display-products-page {
   float: right;
+  /* LTR */
   padding-top: 10px;
   margin-bottom: 10px; }
 
@@ -45,6 +48,7 @@
   width: 300px;
   float: none;
   margin-right: 10px;
+  /* LTR */
   margin-bottom: 0; }
 
 /**********************************************
@@ -66,6 +70,7 @@
   .navigation .second-menu ul {
     display: block;
     float: left;
+    /* LTR */
     margin: 0;
     width: 100%; }
     .navigation .primary-menu ul li,
@@ -85,17 +90,23 @@
           border-right-width: 0; }
       .navigation .primary-menu ul li.first a,
       .navigation .second-menu ul li.first a {
-        border-left: 1px solid #cccccc; }
+        border-left: 1px solid #cccccc;
+        /* LTR */ }
       .navigation .primary-menu ul li.last a,
       .navigation .second-menu ul li.last a {
-        border-right: 1px solid #cccccc; }
+        border-right: 1px solid #cccccc;
+        /* LTR */ }
   .navigation .primary-menu {
     float: left;
+    /* LTR */
     margin-right: 12px;
-    margin-left: 0; }
+    /* LTR */
+    margin-left: 0;
+    /* LTR */ }
   .navigation .second-menu {
     clear: inherit;
     float: right;
+    /* LTR */
     margin-right: 0; }
 
 .zone-menu .block-menu h2.block-title {
@@ -135,7 +146,8 @@
   float: inherit; }
 
 #search-api-ranges-block-slider-view-form label {
-  float: left; }
+  float: left;
+  /* LTR */ }
 
 #search-api-ranges-block-slider-view-form #edit-range-from,
 #search-api-ranges-block-slider-view-form #edit-range-to {
@@ -213,7 +225,8 @@
 */
 .section-footer ul.menu li.expanded {
   display: inline;
-  float: left; }
+  float: left;
+  /* LTR */ }
 
 /**********************************************
 * 4.2. Zone footer2
@@ -235,10 +248,15 @@
 /**
 * Collection page
 */
+.view-collection-products .view-header,
 .view-collection-taxonomy-term .view-header {
   background-size: cover; }
+  .view-collection-products .view-header .taxonomy-title,
   .view-collection-taxonomy-term .view-header .taxonomy-title {
     position: relative; }
+  .view-collection-products .view-header .view-collection-products,
+  .view-collection-products .view-header .collection-terms,
+  .view-collection-taxonomy-term .view-header .view-collection-products,
   .view-collection-taxonomy-term .view-header .collection-terms {
     float: right;
     margin: 5px;
@@ -250,26 +268,33 @@
 /**
 * Add to cart popin.
 */
-div.messages.commerce-kickstart-add-to-cart .message-inner .button-wrapper {
+div.messages.commerce-add-to-cart-confirmation .message-inner .button-wrapper {
   float: none;
   height: 100%;
   position: absolute;
-  right: 0; }
-div.messages.commerce-kickstart-add-to-cart .message-inner .view-confirm-message-product-display {
-  float: left; }
-  div.messages.commerce-kickstart-add-to-cart .message-inner .view-confirm-message-product-display .view-content .views-field-commerce-product .content .field-name-field-images {
+  right: 0;
+  /* LTR */ }
+div.messages.commerce-add-to-cart-confirmation .message-inner .view-confirm-message-product-display {
+  float: left;
+  /* LTR */ }
+  div.messages.commerce-add-to-cart-confirmation .message-inner .view-confirm-message-product-display .view-content .views-field-commerce-product .content .field-name-field-images {
     clear: left;
-    float: left; }
+    /* LTR */
+    float: left;
+    /* LTR */ }
 
 /* Product details */
 .node-product-type {
   /* Cloud zoom */ }
-  .node-product-type .commerce-product-field .cloud-zoom-big,
-  .node-product-type .commerce-product-field .mousetrap,
-  .node-product-type .commerce-product-field .cloud-zoom-lens {
+  .node-product-type .cloud-zoom-container .cloud-zoom-big,
+  .node-product-type .cloud-zoom-container .mousetrap,
+  .node-product-type .cloud-zoom-container .cloud-zoom-lens {
     display: inherit !important; }
   .node-product-type .field-name-field-product form.commerce-add-to-cart label {
     float: none; }
+
+.service-links {
+  width: auto; }
 
 /**********************************************
 * 5.4. Checkout process
@@ -281,6 +306,7 @@ div.messages.commerce-kickstart-add-to-cart .message-inner .view-confirm-message
 .page-checkout #commerce-checkout-form-checkout fieldset label,
 .page-checkout #commerce-checkout-form-review fieldset label {
   float: left;
+  /* LTR */
   width: 20%; }
 .page-checkout #commerce-checkout-form-checkout fieldset .commerce-customer-profile-copy label,
 .page-checkout #commerce-checkout-form-review fieldset .commerce-customer-profile-copy label {
@@ -326,38 +352,43 @@ div.messages.commerce-kickstart-add-to-cart .message-inner .view-confirm-message
     clear: none;
     float: left;
     width: 45%; }
-  .page-user form#user-register-form .form-item-pass .password-parent,
-  .page-user form#user-profile-form .form-item-pass .password-parent,
-  .page-checkout form#user-register-form .form-item-pass .password-parent,
-  .page-checkout form#user-profile-form .form-item-pass .password-parent {
-    position: relative;
-    width: 36.3em; }
-    .page-user form#user-register-form .form-item-pass .password-parent .password-strength,
-    .page-user form#user-profile-form .form-item-pass .password-parent .password-strength,
-    .page-checkout form#user-register-form .form-item-pass .password-parent .password-strength,
-    .page-checkout form#user-profile-form .form-item-pass .password-parent .password-strength {
-      position: absolute;
-      right: 15px;
-      bottom: -12px;
-      width: 17em; }
-  .page-user form#user-register-form .form-item-pass .confirm-parent,
-  .page-user form#user-profile-form .form-item-pass .confirm-parent,
-  .page-checkout form#user-register-form .form-item-pass .confirm-parent,
-  .page-checkout form#user-profile-form .form-item-pass .confirm-parent {
-    position: relative;
-    width: 36.3em; }
-    .page-user form#user-register-form .form-item-pass .confirm-parent div.password-confirm,
-    .page-user form#user-profile-form .form-item-pass .confirm-parent div.password-confirm,
-    .page-checkout form#user-register-form .form-item-pass .confirm-parent div.password-confirm,
-    .page-checkout form#user-profile-form .form-item-pass .confirm-parent div.password-confirm {
-      right: 15px;
-      bottom: 8px;
-      width: 17em; }
-  .page-user form#user-register-form .form-item-pass .password-suggestions,
-  .page-user form#user-profile-form .form-item-pass .password-suggestions,
-  .page-checkout form#user-register-form .form-item-pass .password-suggestions,
-  .page-checkout form#user-profile-form .form-item-pass .password-suggestions {
-    width: 38.5em; }
+  .page-user form#user-register-form .form-item-pass,
+  .page-user form#user-profile-form .form-item-pass,
+  .page-checkout form#user-register-form .form-item-pass,
+  .page-checkout form#user-profile-form .form-item-pass {
+    margin-bottom: auto; }
+    .page-user form#user-register-form .form-item-pass .password-parent,
+    .page-user form#user-profile-form .form-item-pass .password-parent,
+    .page-checkout form#user-register-form .form-item-pass .password-parent,
+    .page-checkout form#user-profile-form .form-item-pass .password-parent {
+      position: relative;
+      width: 36.3em; }
+      .page-user form#user-register-form .form-item-pass .password-parent .password-strength,
+      .page-user form#user-profile-form .form-item-pass .password-parent .password-strength,
+      .page-checkout form#user-register-form .form-item-pass .password-parent .password-strength,
+      .page-checkout form#user-profile-form .form-item-pass .password-parent .password-strength {
+        position: absolute;
+        right: 15px;
+        bottom: -12px;
+        width: 17em; }
+    .page-user form#user-register-form .form-item-pass .confirm-parent,
+    .page-user form#user-profile-form .form-item-pass .confirm-parent,
+    .page-checkout form#user-register-form .form-item-pass .confirm-parent,
+    .page-checkout form#user-profile-form .form-item-pass .confirm-parent {
+      position: relative;
+      width: 36.3em; }
+      .page-user form#user-register-form .form-item-pass .confirm-parent div.password-confirm,
+      .page-user form#user-profile-form .form-item-pass .confirm-parent div.password-confirm,
+      .page-checkout form#user-register-form .form-item-pass .confirm-parent div.password-confirm,
+      .page-checkout form#user-profile-form .form-item-pass .confirm-parent div.password-confirm {
+        right: 15px;
+        bottom: 8px;
+        width: 17em; }
+    .page-user form#user-register-form .form-item-pass .password-suggestions,
+    .page-user form#user-profile-form .form-item-pass .password-suggestions,
+    .page-checkout form#user-register-form .form-item-pass .password-suggestions,
+    .page-checkout form#user-profile-form .form-item-pass .password-suggestions {
+      width: 38.5em; }
   .page-user form#user-register-form .form-actions,
   .page-user form#user-profile-form .form-actions,
   .page-checkout form#user-register-form .form-actions,

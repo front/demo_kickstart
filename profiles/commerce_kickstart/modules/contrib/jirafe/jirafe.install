@@ -29,3 +29,35 @@ function jirafe_requirements($phase) {
   }
   return $requirements;
 }
+
+/**
+ * Synchronize jirafe's configuration between actual site and Jirafe's servers.
+ */
+function jirafe_update_7001() {
+  $config = variable_get('jirafe_config', array(
+    'token' => NULL,
+    'app_id' => NULL,
+    'sites' => NULL,
+    'users' => NULL,
+  ));
+  // Only run the update if jirafe is already configured.
+  if (!empty($config['token']) && !empty($config['app_id'])) {
+    // Since we need the site's uri when sunchronizing data, ensure that the user
+    // use the --uri option if we run this update with drush.
+    if (drupal_is_cli()) {
+      if (drush_get_option('uri') == 'http://default') {
+        throw new DrupalUpdateException('You need to use the --uri option when doing this update with drush.');
+      }
+    }
+    // Only run the sync if we don't already have correct values.
+    if (empty($config['sites']) || empty($config['users'])) {
+      module_load_include('inc', 'jirafe', 'jirafe.jirafe');
+      try {
+        jirafe_synchronize();
+      }
+      catch (Exception $e) {
+        drupal_set_message($e->getMessage(), 'warning');
+      }
+    }
+  }
+}

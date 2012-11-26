@@ -85,7 +85,7 @@ function commerce_addressbook_customer_profile_form_submit($form, &$form_state) 
  * @see confirm_form()
  * @see commerce_addressbook_profile_options_delete_form_submit()
  */
-function commerce_addressbook_profile_options_delete_form($form, $form_state, $account, $customer_profile) {
+function commerce_addressbook_profile_options_delete_form($form, &$form_state, $account, $customer_profile) {
   // Add the breadcrumb for the form's location.
   commerce_addressbook_set_breadcrumb($account, $customer_profile->type);
 
@@ -145,11 +145,10 @@ function commerce_addressbook_profile_options_default($account, $customer_profil
  *
  * Displays first enabled profile type addressbook page if user is logged in, or access denied for anonymous
  */
-function commerce_addressbook_page() {
-  global $user;
-  if ($user->uid) {
+function commerce_addressbook_page($account) {
+  if ($account->uid) {
     if ($type = commerce_addressbook_page_access()) {
-      menu_set_active_item('user/' . $user->uid . '/addressbook/' . $type);
+      menu_set_active_item('user/' . $account->uid . '/addressbook/' . $type);
       return menu_execute_active_handler(NULL, FALSE);
     }
   }

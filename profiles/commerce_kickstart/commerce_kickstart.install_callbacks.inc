@@ -179,16 +179,19 @@ function _commerce_kickstart_example_taxes($operation, &$context) {
 function _commerce_kickstart_taxonomy_menu($operation, &$context) {
   $context['message'] = t('@operation', array('@operation' => $operation));
 
+
   // Set up taxonomy main menu.
-  $collection = taxonomy_vocabulary_machine_name_load('collection');
-  $variable_name = _taxonomy_menu_build_variable('vocab_menu', $collection->vid);
-  variable_set($variable_name, 'main-menu');
-  $variable_name = _taxonomy_menu_build_variable('vocab_parent', $collection->vid);
-  variable_set($variable_name, '0');
-  $variable_name = _taxonomy_menu_build_variable('path', $collection->vid);
-  variable_set($variable_name, 'taxonomy_menu_path_default');
-  $variable_name = _taxonomy_menu_build_variable('rebuild', $collection->vid);
-  variable_set($variable_name, 1);
+  $vocabulary_machine_name = variable_get('commerce_kickstart_demo_store', FALSE) ? 'collection' : 'product_category';
+  if ($collection = taxonomy_vocabulary_machine_name_load($vocabulary_machine_name)) {
+    $variable_name = _taxonomy_menu_build_variable('vocab_menu', $collection->vid);
+    variable_set($variable_name, 'main-menu');
+    $variable_name = _taxonomy_menu_build_variable('vocab_parent', $collection->vid);
+    variable_set($variable_name, '0');
+    $variable_name = _taxonomy_menu_build_variable('path', $collection->vid);
+    variable_set($variable_name, 'commerce_kickstart_taxonomy_term_path');
+    $variable_name = _taxonomy_menu_build_variable('rebuild', $collection->vid);
+    variable_set($variable_name, 1);
+  }
 }
 
 /**
@@ -272,7 +275,7 @@ function _commerce_kickstart_post_import($operation, &$context) {
  * Configures the theme and assign blocks to the appropriate regions.
  */
 function _commerce_kickstart_setup_blocks() {
-  $admin_theme = 'commerce_kickstart_admin';
+  $admin_theme = 'shiny';
   $default_theme = variable_get('theme_default', 'omega_kickstart');
 
   $blocks = array(
@@ -327,8 +330,8 @@ function _commerce_kickstart_setup_blocks() {
       'status' => 1,
       'weight' => -30,
       'region' => 'content',
-      'pages' => '',
-      'visibility' => 0,
+      'pages' => 'products',
+      'visibility' => BLOCK_VISIBILITY_LISTED,
       'cache' => DRUPAL_NO_CACHE,
     ),
     // Commerce checkout progress

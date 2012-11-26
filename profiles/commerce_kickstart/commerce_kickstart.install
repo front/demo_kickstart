@@ -63,7 +63,7 @@ function commerce_kickstart_install_tasks_alter(&$tasks, $install_state) {
   $old_tasks = $tasks;
   $tasks = array_slice($old_tasks, 0, 2) + $new_task + array_slice($old_tasks, 2);
 
-  _commerce_kickstart_set_theme('commerce_kickstart_admin');
+  _commerce_kickstart_set_theme('shiny');
 }
 
 /**
@@ -276,6 +276,7 @@ function commerce_kickstart_install_additional_modules() {
       'commerce_kickstart_merchandising',
       'commerce_kickstart_menus',
       'commerce_kickstart_search',
+      'commerce_kickstart_taxonomy',
     );
   }
   else {
@@ -283,8 +284,9 @@ function commerce_kickstart_install_additional_modules() {
       'commerce_kickstart_block',
       'commerce_kickstart_user',
       'commerce_kickstart_lite_product',
-      'commerce_kickstart_lite_product_ui',
+      'commerce_kickstart_product_ui',
       'commerce_kickstart_search',
+      'commerce_kickstart_taxonomy',
     );
     $selected_extras = variable_get('commerce_kickstart_selected_extras', array());
     if (empty($selected_extras['anonymous_checkout'])) {
@@ -306,7 +308,7 @@ function commerce_kickstart_install_additional_modules() {
       $modules[] = 'commerce_kickstart_social';
     }
     if (!empty($selected_extras['zoom_cloud'])) {
-      $modules[] = 'commerce_kickstart_lite_product_zoom';
+      variable_set('commerce_kickstart_product_zoom_enabled', TRUE);
     }
   }
 
@@ -388,9 +390,7 @@ function commerce_kickstart_import_content() {
   $operations[] = array('_commerce_kickstart_example_taxes', array(t('Setting up taxes.')));
 
   $install_demo_store = variable_get('commerce_kickstart_demo_store', FALSE);
-  if ($install_demo_store) {
-    $operations[] = array('_commerce_kickstart_taxonomy_menu', array(t('Setting up menus.')));
-  }
+  $operations[] = array('_commerce_kickstart_taxonomy_menu', array(t('Setting up menus.')));
 
   // Run all available migrations.
   $migrations = migrate_migrations();
@@ -426,13 +426,14 @@ function commerce_kickstart_install_finished(&$install_state) {
   drupal_set_title(st('@drupal installation complete', array('@drupal' => drupal_install_profile_distribution_name())), PASS_THROUGH);
   $messages = drupal_set_message();
 
+  // Remember the profile which was used.
+  variable_set('install_profile', drupal_get_profile());
+  variable_set('install_task', 'done');
+
   // Flush all caches to ensure that any full bootstraps during the installer
   // do not leave stale cached data, and that any content types or other items
   // registered by the install profile are registered correctly.
   drupal_flush_all_caches();
-
-  // Remember the profile which was used.
-  variable_set('install_profile', drupal_get_profile());
 
   // Install profiles are always loaded last
   db_update('system')
@@ -545,7 +546,7 @@ function commerce_kickstart_install() {
   filter_format_save($full_html_format);
 
   // Enable the admin theme.
-  $admin_theme = 'commerce_kickstart_admin';
+  $admin_theme = 'shiny';
   theme_enable(array($admin_theme));
   variable_set('admin_theme', $admin_theme);
   variable_set('node_admin_theme', '1');
@@ -627,4 +628,254 @@ function commerce_kickstart_install() {
     ),
   );
   search_api_server_insert($values);
+}
+
+function commerce_kickstart_update_7100() {
+  registry_rebuild();
+}
+
+/**
+ * Update the admin theme from "Commerce Kickstart Admin Theme" to "Shiny".
+ */
+function commerce_kickstart_update_7200() {
+  // Enable the new theme.
+  theme_enable(array('shiny'));
+  variable_set('admin_theme', 'shiny');
+  drupal_static_reset();
+  _block_rehash('shiny');
+
+  // Disable all blocks in the content region except "Main page content".
+  db_update('block')
+    ->fields(array('region' => '-1'))
+    ->condition('theme', 'shiny')
+    ->condition('region', 'content')
+    ->condition(db_and()
+      ->condition('module', 'system', '<>')
+      ->condition('delta', 'main', '<>')
+    )
+    ->execute();
+
+  // Move help to the correct region.
+  db_update('block')
+    ->fields(array('region' => 'help'))
+    ->condition('module', 'system')
+    ->condition('delta', 'help')
+    ->condition('theme', 'shiny')
+    ->execute();
+
+  // Disable the old theme.
+  theme_disable(array('commerce_kickstart_admin'));
+}
+
+/**
+ * Flush caches and rebuild features.
+ */
+function commerce_kickstart_update_7201() {
+  // install_task wasn't set properly on older installs, which affects
+  // feature rebuilding.
+  variable_set('install_task', 'done');
+
+  // Only non-overridden indexes get processed in 7202, no reason to do a
+  // cache clear this early otherwise.
+  $index = search_api_index_load('product_display');
+  if (!empty($index) && !$index->hasStatus(ENTITY_OVERRIDDEN)) {
+    entity_property_info_cache_clear();
+    drupal_flush_all_caches();
+  }
+}
+
+/**
+ * Update Search API integration to work with Commerce 1.4
+ */
+function commerce_kickstart_update_7202() {
+  // The price property has changed. A reindex is necessary.
+  drupal_load('module', 'search_api');
+  $index = search_api_index_load('product_display');
+  if (!empty($index) && !$index->hasStatus(ENTITY_OVERRIDDEN)) {
+    // Refresh the list of blocks and enable the new Price facet block.
+    $default_theme = variable_get('theme_default', 'omega_kickstart');
+    drupal_static_reset();
+    _block_rehash($default_theme);
+    db_update('block')
+      ->fields(array('region' => 'sidebar_first', 'status' => 1, 'weight' => -1))
+      ->condition('module', 'facetapi')
+      ->condition('delta', 'TFVaQKSORCPdrULxfXDnLQZ40xH0Nper')
+      ->condition('theme', $default_theme)
+      ->execute();
+
+    $index->clear();
+    search_api_index_items($index, 100);
+  }
+  else {
+    // The index is overridden and can't be modified, so point the user
+    // to the documentation page.
+    return '<strong style="color: red">' . t('Important: To complete the update process, please visit http://drupal.org/node/1819842 and follow the instructions.') . '</strong>';
+  }
+}
+
+/**
+ * Remove the old price sort.
+ */
+function commerce_kickstart_update_7203() {
+  $sorts = entity_load('search_api_sort', FALSE, array('field' => 'field_product_commerce_price_amount_float_asc'));
+  if (!empty($sorts)) {
+    $sort = reset($sorts);
+    $sort->delete();
+  }
+}
+
+/**
+ * Enable the commerce_backoffice_content module.
+ */
+function commerce_kickstart_update_7204() {
+  db_update('system')
+    ->fields(array('status' => 0))
+    ->condition('name', 'commerce_kickstart_content_ui')
+    ->condition('type', 'module')
+    ->execute();
+  drupal_flush_all_caches();
+  module_enable(array('commerce_backoffice_content'));
+}
+
+/**
+ * Replace the collection view by a view based on the product display index.
+ */
+function commerce_kickstart_update_7205(&$sandbox) {
+  // Enable commerce_kickstart_taxonomy.
+  module_enable(array('commerce_kickstart_taxonomy'));
+  menu_rebuild();
+  // Disable the old taxonomy/term/% view.
+  $view = views_get_view('collection_taxonomy_term');
+  if (isset($view->disabled) && $view->disabled === FALSE) {
+    views_export_status($view, TRUE);
+  }
+  $default_theme = variable_get('theme_default', 'omega_kickstart');
+  // Set the facets blocks only visibile on the "all products" view.
+  db_update('block')
+    ->fields(array('pages' => 'products', 'visibility' => BLOCK_VISIBILITY_LISTED))
+    ->condition('module', array('facetapi', 'search_api_sorts'))
+    ->condition('theme', $default_theme)
+    ->execute();
+  $install_demo_store = variable_get('commerce_kickstart_demo_store', FALSE);
+  // Set up taxonomy main menu..
+  if ($install_demo_store) {
+    $vocabulary_machine_name = 'collection';
+  }
+  else {
+    $vocabulary_machine_name = 'product_category';
+  }
+  if (($collection = taxonomy_vocabulary_machine_name_load($vocabulary_machine_name)) && module_exists('taxonomy_menu')) {
+    drupal_load('module', 'taxonomy_menu');
+    $variable_name = _taxonomy_menu_build_variable('vocab_menu', $collection->vid);
+    variable_set($variable_name, 'main-menu');
+    $variable_name = _taxonomy_menu_build_variable('path', $collection->vid);
+    variable_set($variable_name, 'commerce_kickstart_taxonomy_term_path');
+    // Remove the previous menu entries.
+    _taxonomy_menu_delete_all($collection->vid);
+    // Taxonomy menu links
+    $terms = taxonomy_get_tree($collection->vid);
+    // Loop through $terms to process each term.
+    foreach ($terms as $term) {
+      $args = array(
+        'term' => $term,
+        'menu_name' => 'main-menu',
+      );
+      $mlid = taxonomy_menu_handler('insert', $args);
+    }
+
+    // Delete old pathauto aliases to regenerate the new ones.
+    db_delete('url_alias')
+      ->condition('source', db_like('taxonomy/term/') . '%', 'LIKE')
+      ->execute();
+
+    // Generate the url using the pathauto bulkupdate.
+    module_load_include('inc', 'pathauto', 'pathauto.pathauto');
+    taxonomy_pathauto_bulk_update_batch_process($sandbox);
+  }
+  // Add fields to the index (Needed for the new view).
+  drupal_load('module', 'search_api');
+  $index = search_api_index_load('product_display');
+  if (!empty($index)) {
+    $indexed_fields = $index->getFields();
+    $options = $index->options;
+    if ($index->hasStatus(ENTITY_OVERRIDDEN)) {
+      $options['fields'] += array(
+        'status' => array(
+          'type' => 'integer',
+        ),
+      );
+      if ($install_demo_store) {
+        $options['fields'] += array(
+          'field_category:name' => array(
+            'type' => 'string',
+          ),
+        );
+      }
+      if (!$index->update(array('options' => $options))) {
+        return '<strong style="color: red;">' . t("Important: We couldn't add the new fields to the index.") . '</strong>';
+      }
+    }
+    // Schedule the reindexing.
+    $index->clear();
+    search_api_index_items($index, 100);
+  }
+}
+
+/**
+ * Enable the commerce_kickstart_product_ui on the no demo store.
+ */
+function commerce_kickstart_update_7206() {
+  if (!variable_get('commerce_kickstart_demo_store', FALSE)) {
+    // Disable the removed lite modules.
+    db_update('system')
+      ->fields(array('status' => 0))
+      ->condition('name', array('commerce_kickstart_lite_product_ui', 'commerce_kickstart_lite_product_zoom'))
+      ->condition('type', 'module')
+      ->execute();
+    drupal_flush_all_caches();
+    module_enable(array('commerce_kickstart_product_ui'));
+  }
+}
+
+/**
+ * Enable facetapi blocks + assign them in the sidebar_first region.
+ */
+function commerce_kickstart_update_7207() {
+  $default_theme = variable_get('theme_default', 'omega_kickstart');
+  _block_rehash($default_theme);
+  // Put the facets blocks in the right place.
+  db_update('block')
+    ->fields(array(
+      'region' => 'sidebar_first',
+      'pages' => 'products',
+      'visibility' => BLOCK_VISIBILITY_LISTED,
+      'status' => (int) '1',
+    ))
+    ->condition('module', 'facetapi')
+    ->condition('delta', '0', '<>')
+    ->condition('theme', $default_theme)
+    ->execute();
+}
+
+/**
+ * Enable commerce_add_to_cart_confirmation.
+ */
+function commerce_kickstart_update_7208() {
+  module_enable(array('commerce_add_to_cart_confirmation'));
+}
+
+/**
+ * Check and remove sorts on non indexed fields.
+ */
+function commerce_kickstart_update_7209() {
+  if ($index = search_api_index_load('product_display')) {
+    $fields = $index->options['fields'];
+    $query = new EntityFieldQuery();
+    $query->entityCondition('entity_type', 'search_api_sort')
+      ->propertyCondition('field', array_keys($fields), 'NOT IN');
+    $results = $query->execute();
+    if (!empty($results['search_api_sort'])) {
+      entity_delete_multiple('search_api_sort', array_keys($results['search_api_sort']));
+    }
+  }
 }

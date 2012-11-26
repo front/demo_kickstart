@@ -1,6 +1,9 @@
 <?php
 
 
+/**
+ * Implements hook_crumbs_plugins().
+ */
 function og_crumbs_plugins($api) {
   $api->multiPlugin('group_post');
   $api->multiPlugin('groups_overview');
@@ -22,14 +25,17 @@ class og_CrumbsMultiPlugin_group_post implements crumbs_MultiPlugin {
 
   function findParent__node_x($path, $item) {
     $node = $item['map'][1];
+    // Load the node if it hasn't been loaded due to a missing wildcard loader.
+    $node = is_numeric($node) ? node_load($node) : $node;
+
     $items = field_get_items('node', $node, 'group_audience');
     if ($items) {
-      // Just pick the first one...
-      $item = $items[0];
-      $row = db_query("SELECT * FROM {og} WHERE gid = :gid", array(':gid' => $item['gid']))->fetchObject();
-      if ($row && $row->entity_type === 'node') {
-        $etid = $row->etid;
-        return array($node->type => "node/$etid");
+      foreach ($items as $item) {
+        $row = db_query("SELECT * FROM {og} WHERE gid = :gid", array(':gid' => $item['gid']))->fetchObject();
+        if ($row && $row->entity_type === 'node') {
+          $etid = $row->etid;
+          return array($node->type => "node/$etid");
+        }
       }
     }
   }
@@ -49,6 +55,9 @@ class og_CrumbsMultiPlugin_groups_overview implements crumbs_MultiPlugin {
 
   function findParent__node_x($path, $item) {
     $node = $item['map'][1];
+    // Load the node if it hasn't been loaded due to a missing wildcard loader.
+    $node = is_numeric($node) ? node_load($node) : $node;
+
     $items = field_get_items('node', $node, 'group_group');
     if ($items) {
       return array($node->type => 'group-list');
@@ -84,6 +93,9 @@ class og_CrumbsMultiPlugin_my_groups_overview implements crumbs_MultiPlugin {
 
   function findParent__node_x($path, $item) {
     $node = $item['map'][1];
+    // Load the node if it hasn't been loaded due to a missing wildcard loader.
+    $node = is_numeric($node) ? node_load($node) : $node;
+
     if (og_is_group_type('node', $node->type)) {
       $group = og_get_group('node', $node->nid);
       if (!empty($group)) {

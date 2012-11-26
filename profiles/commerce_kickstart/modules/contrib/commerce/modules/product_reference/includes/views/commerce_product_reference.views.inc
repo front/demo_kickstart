@@ -23,8 +23,8 @@ function commerce_product_reference_field_views_data($field) {
   // Build an array of bundles the product reference field appears on.
   $bundles = array();
 
-  foreach ($field['bundles'] as $entity => $bundles) {
-    $bundles[] = $entity . ' (' . implode(', ', $bundles) . ')';
+  foreach ($field['bundles'] as $entity => $entity_bundles) {
+    $bundles[] = $entity . ' (' . implode(', ', $entity_bundles) . ')';
   }
 
   foreach ($data as $table_name => $table_data) {
@@ -32,7 +32,7 @@ function commerce_product_reference_field_views_data($field) {
       if (isset($field_data['filter']['field_name']) && $field_name != 'delta') {
         $data[$table_name][$field_name]['relationship'] = array(
           'title' => t('Referenced product'),
-          'help' => t('Appears in: @bundles', array('@bundles' => implode(', ', $bundles))),
+          'help' => t('Appears in: @bundles.', array('@bundles' => implode(', ', $bundles))),
           'base' => 'commerce_product',
           'base field' => 'product_id',
           'handler' => 'views_handler_relationship',

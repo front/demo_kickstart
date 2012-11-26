@@ -10,6 +10,12 @@ function views_megarow_menu() {
     'access arguments' => array('access content'),
     'type' => MENU_CALLBACK,
   );
+  $items['display_megarow/%/%'] = array(
+    'page callback' => 'views_megarow_generic_render',
+    'page arguments' => array(1, 2),
+    'delivery callback' => 'ajax_deliver',
+    'access callback' => TRUE,
+  );
   return $items;
 }
 
@@ -29,6 +35,36 @@ function views_megarow_get_row($view_name, $display, $entity_id) {
   }
 
   return $output;
+}
+
+/**
+ * Use a generic menu callback to display non megarow tailored pages.
+ */
+function views_megarow_generic_render($entity_id) {
+  // Get the arguments passed to the render callback, it's basicaly
+  // a split path.
+  $args = func_get_args();
+
+  // Remove the entity_id argument.
+  array_shift($args);
+
+  // Clean the values and implode them to generate a clean path.
+  $path = implode('/', array_filter($args));
+
+  // Get the output of the called page.
+  $output = menu_execute_active_handler($path, FALSE);
+
+  // Allow errors to bubble up. The error is always one of: MENU_SITE_OFFLINE,
+  // MENU_ACCESS_DENIED, MENU_NOT_FOUND
+  if (is_int($output)) {
+    return $output;
+  }
+
+  // The output is valid, display it through AJAX and voilà!
+  $commands = array();
+  $commands[] = views_megarow_command_display('Megarow content', drupal_render($output), $entity_id);
+
+  return array('#type' => 'ajax', '#commands' => $commands);
 }
 
 /**

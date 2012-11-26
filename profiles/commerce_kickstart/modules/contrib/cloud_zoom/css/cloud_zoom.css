@@ -2,3 +2,6 @@
 .cloud-zoom-container #wrap {
   z-index: 499 !important;
 }
+.cloud-zoom-gallery-thumbs {
+  clear:left;
+}

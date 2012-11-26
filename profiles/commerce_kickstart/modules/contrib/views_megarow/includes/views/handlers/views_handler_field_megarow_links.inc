@@ -66,6 +66,10 @@ class views_handler_field_megarow_links extends views_handler_field {
       $token_type = str_replace('_', '-', $table_data['table']['entity type']);
     }
 
+    // Hardcode the pattern for taxonomy terms.
+    if ($token_type == 'taxonomy-term') {
+      $token_type = 'term';
+    }
     return $token_type;
   }
 
@@ -79,6 +83,9 @@ class views_handler_field_megarow_links extends views_handler_field {
     $results = array($values);
     $entities = $this->query->get_result_entities($results);
     $entity = reset($entities[1]);
+    $table_data = views_fetch_data($this->table);
+    $entity_type = $table_data['table']['entity type'];
+    list($entity_id) = entity_extract_ids($entity_type, $entity);
 
     // Create an array of links.
     $provided_links = explode("\n", $this->options['megarow']['links']);
@@ -88,11 +95,15 @@ class views_handler_field_megarow_links extends views_handler_field {
     $links = array();
     foreach ($provided_links as $link) {
       $link_parts = explode('|', $link);
-      $url = $this->getUrl($link_parts[1], $entity);
+      $url = 'display_megarow/' . $entity_id . '/' . $this->getUrl($link_parts[1], $entity);
       $links[] = $this->getLink($link_parts[0], $url, array('class' => 'views-megarow-open'));
     }
 
-    if (count($links) > 1) {
+    $nb_links = count($links);
+    if ($nb_links == 0) {
+      $element = array();
+    }
+    else if ($nb_links > 1) {
       $element = array(
         '#prefix' => $this->getElementPrefix($values),
         '#markup' => theme('links__ctools_dropbutton', array('links' => $links, 'attributes' => array('class' => array('links', 'inline')))),

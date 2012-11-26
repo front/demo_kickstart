@@ -22,6 +22,7 @@
 *******************************************/
 #promotional_banner .promotional_banner_special_offer {
   float: right;
+  /* LTR */
   line-height: 22px;
   margin-top: 4px; }
 
@@ -52,6 +53,7 @@
 /**********************************************
 * 5.1. Search & Collection page
 **********************************************/
+.view-collection-products .view-header .collection-terms .view-content .item-list,
 .view-collection-taxonomy-term .view-header .collection-terms .view-content .item-list {
   display: block;
   float: none; }
@@ -59,10 +61,11 @@
 /**********************************************
 * 5.3. Product page
 **********************************************/
-.node-product-type .commerce-product-field .cloud-zoom-container #wrap {
-  float: right; }
-.node-product-type .commerce-product-field .cloud-zoom-container .cloud-zoom-gallery-thumbs {
-  /*float: left;*/
-  clear: none; }
-  .node-product-type .commerce-product-field .cloud-zoom-container .cloud-zoom-gallery-thumbs .cloud-zoom-gallery {
+.node-product-type .cloud-zoom-container #wrap {
+  float: right !important;
+  /* LTR */ }
+.node-product-type .cloud-zoom-container .cloud-zoom-gallery-thumbs {
+  clear: none;
+  float: none !important; }
+  .node-product-type .cloud-zoom-container .cloud-zoom-gallery-thumbs .cloud-zoom-gallery {
     margin: 5px; }

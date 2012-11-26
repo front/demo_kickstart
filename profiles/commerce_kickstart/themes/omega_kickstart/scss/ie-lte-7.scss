@@ -47,12 +47,18 @@ img {
 }
 #block-views-exp-display-products-page #edit-search-api-views-fulltext {
   height: 18px;
+  padding: 5px;
 }
-#block-views-exp-display-products-page .views-submit-button .form-submit {
-  float: left;
-  width: 24px;
-  height: 24px;
+#block-views-exp-display-products-page .views-submit-button {
+  position: absolute;
+  right: 0;
+  .form-submit {
+    float: right;
+    width: 24px;
+    height: 24px;
+  }
 }
+
 /**********************************************
 * 2.3. Zone menu
 **********************************************/
@@ -108,8 +114,24 @@ img {
 /**********************************************
 * 5.1. Search & Collection page
 **********************************************/
+/**
+* Collection page
+*/
+
+.view-collection-products .view-header .view-collection-products,
 .view-collection-taxonomy-term .view-header .collection-terms {
   padding-bottom: 5px;
+}
+.view-collection-products .view-content .item-list .products-per-collection li,
+.view-collection-taxonomy-term .view-content .item-list .products-per-collection li {
+  header {
+    display: block !important;
+  }
+  .field-type-commerce-price {
+    .price_prefix p {
+      padding-right: 5px;
+    }
+  }
 }
 /**********************************************
 * 5.2. All products page
@@ -119,11 +141,43 @@ img {
   margin-top: 40px;
   width: 700px;
 
-  ul li.views-row {
-    display: block;
-    height: auto;
-    margin: 0;
-    width: 225px;
+  ul li {
+   &.views-row {
+     display: block;
+     height: auto;
+     margin: 0;
+     width: 225px;
+   }
+    header {
+      display: block;
+    }
+    .content {
+
+      .field-name-commerce-price {
+        .price_prefix p {
+          padding-right: 5px;
+        }
+      }
+    }
+  }
+}
+/**********************************************
+* 5.3. Product page
+**********************************************/
+/**
+* Add to cart popin.
+*/
+div.messages.commerce-add-to-cart-confirmation {
+  .message-inner {
+    .added-product-title {
+      float: left; /* LTR */
+      width: 180px;
+    }
+    .button-wrapper {
+      clear: none;
+      float: right; /* LTR */
+      width: 166px;
+    }
   }
 }
 /**********************************************
@@ -133,30 +187,21 @@ img {
 * Checkout progress
 */
 ol.inline.commerce-checkout-progress li {
-  padding-right: 50px;
-  padding-left: 25px;
-}
-ol.inline.commerce-checkout-progress li {
   background-image: url('../images/bg_checkout_progress_ie.png');
-  background-position: right center;
+  background-position: right center; /* LTR */
   background-repeat: no-repeat;
-  right: -5px;
-
+  padding-right: 50px; /* LTR */
+  padding-left: 25px; /* LTR */
+  right: -5px; /* LTR */
 }
 ol.inline.commerce-checkout-progress li.active {
   background-image: url('../images/bg_checkout_progress_ie.png');
-  background-position: right center;
-  background-repeat: no-repeat;
 }
 ol.inline.commerce-checkout-progress li.previous {
   background-image: url('../images/bg_checkout_progress_ie_visited.png');
-  background-position: right center;
-  background-repeat: no-repeat;
 }
 ol.inline.commerce-checkout-progress li.last {
   background-image: url('../images/bg_checkout_progress_ie_last.png');
-  background-position: right center;
-  background-repeat: no-repeat;
 }
 /**************************************************
 * --

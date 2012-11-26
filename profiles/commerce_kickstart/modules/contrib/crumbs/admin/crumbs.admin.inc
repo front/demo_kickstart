@@ -2,9 +2,6 @@
 
 
 function crumbs_admin_form() {
-
-  _crumbs_include();
-
   $form = array();
 
   // drupal_add_js(drupal_get_path('module', 'crumbs') .'/crumbs.admin.js');
@@ -90,9 +87,9 @@ EOT;
 
 function _crumbs_get_default_text() {
 
-  list($plugins, $disabled_keys) = _crumbs_load_plugins();
+  list($plugins, $disabled_keys) = crumbs_get_plugins();
   list($available_keys, $keys_by_plugin) = _crumbs_load_available_keys($plugins);
-  $weights = _crumbs_load_weights();
+  $weights = crumbs_get_weights();
 
   return _crumbs_build_default_text($available_keys, $keys_by_plugin, $weights, $disabled_keys);
 }
@@ -195,12 +192,9 @@ function _crumbs_admin_find_ideal_length(array $key_lengths, $factor = 30) {
 
 
 function crumbs_admin_form_submit($form, &$form_state) {
-
-  module_load_include('inc', 'crumbs', 'crumbs.plugin_engine');
-
-  $weights = _crumbs_load_weights();
+  $weights = crumbs_get_weights();
   asort($weights);
-  list($plugins, $disabled_keys) = _crumbs_load_plugins();
+  list($plugins, $disabled_keys) = crumbs_get_plugins();
   list($available_keys, $keys_by_plugin) = _crumbs_load_available_keys($plugins);
 
   $weights = array();
@@ -239,5 +233,3 @@ function _crumbs_load_available_keys(array $plugins) {
   }
   return array($invokeAction->getKeys(), $invokeAction->getKeysByPlugin());
 }
-
-

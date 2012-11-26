@@ -329,7 +329,7 @@ function views_ajax_autocomplete_user($string = '') {
  *
  * @see taxonomy_autocomplete()
  */
-function views_ajax_autocomplete_taxonomy($vids, $tags_typed = '') {
+function views_ajax_autocomplete_taxonomy($vid, $tags_typed = '') {
   // The user enters a comma-separated list of tags. We only autocomplete the last tag.
   $tags_typed = drupal_explode_tags($tags_typed);
   $tag_last = drupal_strtolower(array_pop($tags_typed));
@@ -348,7 +348,7 @@ function views_ajax_autocomplete_taxonomy($vids, $tags_typed = '') {
     // Select rows that match by term name.
     $tags_return = $query
       ->fields('t', array('tid', 'name'))
-      ->condition('t.vid', explode(',', $vids), 'IN')
+      ->condition('t.vid', $vid)
       ->condition('t.name', '%' . db_like($tag_last) . '%', 'LIKE')
       ->range(0, 10)
       ->execute()

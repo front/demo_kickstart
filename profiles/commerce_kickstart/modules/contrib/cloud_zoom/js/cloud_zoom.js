@@ -1,8 +1,11 @@
 (function ($) {
-Drupal.behaviors.mybehavior = {
+Drupal.behaviors.cloudZoom = {
   attach: function (context, settings) {
-    // The cloud zoom options are in the HTML.
-    $('.cloud-zoom, .cloud-zoom-gallery').CloudZoom();
+    items = $('.cloud-zoom:not(cloud-zoom-processed), .cloud-zoom-gallery:not(cloud-zoom-processed)', context);
+    if (items.length) {
+      items.addClass('cloud-zoom-processed').CloudZoom();
+      items.parent().css('float', 'left');
+    }
   }
 };
 })(jQuery);

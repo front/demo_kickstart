@@ -1,5 +1,5 @@
-@import url(//fonts.googleapis.com/css?family=Open+Sans:400,700,300,600,800);
-@import url(//fonts.googleapis.com/css?family=Gentium+Basic:400,700);
+@import url(http://fonts.googleapis.com/css?family=Open+Sans:400,700,300,600,800);
+@import url(http://fonts.googleapis.com/css?family=Gentium+Basic:400,700);
 /* Include Default Variables & Mixins */
 /* End Variables & Mixins */
 /**************************************************
@@ -104,6 +104,7 @@
     overflow: visible !important; }
   #block-views-demo-content-slideshow-block-1 .bx-wrapper ul.event-slider li {
     height: 480px;
+    overflow: visible;
     width: 940px; }
     #block-views-demo-content-slideshow-block-1 .bx-wrapper ul.event-slider li img {
       overflow: hidden;
@@ -160,15 +161,22 @@
         text-transform: uppercase; }
   #block-views-demo-content-slideshow-block-1 .bx-prev {
     margin-left: 0;
+    /* LTR */
     float: left;
-    position: absolute;
-    bottom: 0; }
-  #block-views-demo-content-slideshow-block-1 .bx-next {
-    margin-right: 0;
-    float: right;
+    /* LTR */
     position: absolute;
     bottom: 0;
-    right: 0; }
+    left: 0;
+    /* LTR */ }
+  #block-views-demo-content-slideshow-block-1 .bx-next {
+    margin-right: 0;
+    /* LTR */
+    float: right;
+    /* LTR */
+    position: absolute;
+    bottom: 0;
+    right: 0;
+    /* LTR */ }
 
 /**********************************************
 * 3.3. Zone postscript
@@ -204,8 +212,10 @@
 /**
 * Collection page
 */
+.view-collection-products .view-header .taxonomy-title,
 .view-collection-taxonomy-term .view-header .taxonomy-title {
   font-size: 3em; }
+.view-collection-products .view-header .collection-terms .view-content .item-list,
 .view-collection-taxonomy-term .view-header .collection-terms .view-content .item-list {
   display: block;
   float: none; }
@@ -216,25 +226,30 @@
 /**
 * Add to cart popin.
 */
-div.messages.commerce-kickstart-add-to-cart .message-inner .added-product-title {
+div.messages.commerce-add-to-cart-confirmation .message-inner .added-product-title {
+  float: left;
+  /* LTR */
   padding-left: 20px;
   width: auto; }
+div.messages.commerce-add-to-cart-confirmation .message-inner .button-wrapper {
+  float: right;
+  /* LTR */ }
 
-.commerce-kickstart-add-to-cart .commerce-product-title,
-.commerce-kickstart-add-to-cart .field,
-.commerce-kickstart-add-to-cart .commerce-product-sku {
+.commerce-add-to-cart-confirmation .commerce-product-title,
+.commerce-add-to-cart-confirmation .field,
+.commerce-add-to-cart-confirmation .commerce-product-sku {
   clear: none; }
 
-.commerce-kickstart-add-to-cart .field,
-.commerce-kickstart-add-to-cart .commerce-product-sku {
+.commerce-add-to-cart-confirmation .field,
+.commerce-add-to-cart-confirmation .commerce-product-sku {
   clear: none;
   float: none; }
 
-.commerce-kickstart-add-to-cart .field-name-field-images {
+.commerce-add-to-cart-confirmation .field-name-field-images {
   float: left; }
 
 /* Cloud zoom */
-.node-product-type .commerce-product-field .cloud-zoom-container .cloud-zoom-gallery-thumbs .cloud-zoom-gallery {
+.node-product-type .cloud-zoom-container .cloud-zoom-gallery-thumbs .cloud-zoom-gallery {
   margin: 5px 0; }
 .node-product-type .field-name-field-product form.commerce-add-to-cart label {
   float: left; }

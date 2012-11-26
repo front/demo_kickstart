@@ -538,30 +538,3 @@ function views_taxonomy_set_breadcrumb(&$breadcrumb, &$argument) {
     $breadcrumb[$path] = check_plain($parent->name);
   }
 }
-/**
- * Get the Content Type Vocabularies.
- */
-function _views_taxonomy_get_node_vocabularies() {
-  $fields = field_info_fields();
-  $node_types = node_type_get_types();
-  $voc_names = array();
-  foreach ($fields as $field) {
-    if ($field['type'] == 'taxonomy_term_reference' && isset($field['bundles']['node'])) {
-      $voc_names[$field['settings']['allowed_values'][0]['vocabulary']] = $field['settings']['allowed_values'][0]['vocabulary'];
-    }
-  }
-  if (!empty($voc_names)) {
-    return _views_taxonomy_get_vocabularies_by_names($voc_names);
-  }
-  return array();
-}
-/**
- * Get the Vocabularies by multiple machine names.
- */
-function _views_taxonomy_get_vocabularies_by_names($voc_names) {
-  $query = new EntityFieldQuery();
-  $query->entityCondition('entity_type', 'taxonomy_vocabulary')
-    ->propertyCondition('machine_name', $voc_names, 'IN');
-  $result = $query->execute();
-  return taxonomy_vocabulary_load_multiple(array_keys($result['taxonomy_vocabulary']));
-}

@@ -16,9 +16,9 @@ files[] = includes/commerce_payleap.admin.inc
 ; Simple tests
 files[] = tests/commerce_payleap.test
 
-; Information added by drupal.org packaging script on 2012-09-13
-version = "7.x-1.x-dev"
+; Information added by drupal.org packaging script on 2012-11-07
+version = "7.x-1.0-beta1"
 core = "7.x"
 project = "commerce_payleap"
-datestamp = "1347538386"
+datestamp = "1352293556"
 

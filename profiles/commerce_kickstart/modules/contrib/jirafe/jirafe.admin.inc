@@ -29,11 +29,13 @@ function jirafe_dashboard_admin_page($form, $form_state) {
     '#title' => t('Application ID'),
     '#type' => 'textfield',
     '#default_value' => $config['app_id'],
+    '#required' => TRUE,
   );
   $form['app_info']['token'] = array(
     '#title' => t('Application token'),
     '#type' => 'textfield',
     '#default_value' => $config['token'],
+    '#required' => TRUE,
   );
 
   if (!empty($config['sites'])) {
@@ -99,4 +101,26 @@ function jirafe_dashboard_admin_page_submit($form, $form_state) {
   $config['token'] = trim($form_state['values']['token']);
   $config['app_id'] = trim($form_state['values']['app_id']);
   variable_set('jirafe_config', $config);
+
+  // Try creating a request with the new configuration to verify it.
+  $client = new Jirafe_Client($config['token']);
+  $result = $client->applications($config['app_id']);
+  try {
+    // This should trigger an exception if the token and app_id don't match.
+    $result->fetch();
+
+    // If the request was successful, redirect to the dashboard.
+    drupal_set_message(t('Jirafe configuration successfully updated.'), 'status');
+
+    // This will synchronize users and sites between the actual site and
+    // Jirafe's servers.
+    jirafe_synchronize();
+
+    // Redirect user to the dashboard.
+    drupal_goto('admin/commerce/jirafe');
+  }
+  catch (Exception $e) {
+    drupal_set_message(t('The credentials could not be verfied, please try again.'), 'error');
+  }
+
 }

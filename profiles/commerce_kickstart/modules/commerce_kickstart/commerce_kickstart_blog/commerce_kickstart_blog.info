@@ -11,6 +11,7 @@ dependencies[] = image_delta_formatter
 dependencies[] = menu
 dependencies[] = options
 dependencies[] = strongarm
+dependencies[] = taxonomy
 dependencies[] = views
 features[ctools][] = strongarm:strongarm:1
 features[ctools][] = views:views_default:3.0
@@ -24,6 +25,7 @@ features[image][] = blog_full
 features[image][] = blog_medium
 features[node][] = blog_post
 features[taxonomy][] = blog_category
+features[taxonomy][] = tags
 features[variable][] = comment_anonymous_blog_post
 features[variable][] = comment_blog_post
 features[variable][] = comment_default_mode_blog_post
@@ -42,9 +44,9 @@ features[views_view][] = blog
 features[views_view][] = blog_category_list
 files[] = commerce_kickstart_blog.migrate.inc
 
-; Information added by drupal.org packaging script on 2012-09-17
-version = "7.x-2.0-rc1"
+; Information added by drupal.org packaging script on 2012-11-09
+version = "7.x-2.0-rc4"
 core = "7.x"
 project = "commerce_kickstart"
-datestamp = "1347893544"
+datestamp = "1352471460"
 

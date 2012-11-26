@@ -2,7 +2,7 @@
 
 
 /**
- * Implements hook_crumbs_plugins()
+ * Implements hook_crumbs_plugins().
  */
 function entityreference_crumbs_plugins($api) {
   foreach (field_info_fields() as $key => $info) {
@@ -42,9 +42,10 @@ abstract class _entityreference_CrumbsMultiPlugin implements crumbs_MultiPlugin 
   protected function _findParentPath($entity) {
     $items = field_get_items($this->entityType, $entity, $this->fieldKey);
     if ($items) {
+      $field = field_info_field($this->fieldKey);
       $item = $items[0];
       $target_id = $item['target_id'];
-      $target_type = $item['target_type'];
+      $target_type = $field['settings']['target_type'];
       $method = '_getPath_' . $target_type;
       if (method_exists($this, $method)) {
         return $this->$method($target_id);
@@ -71,6 +72,9 @@ class _entityreference_CrumbsMultiPlugin_node extends _entityreference_CrumbsMul
    */
   function findParent__node_x($path, $item) {
     $node = $item['map'][1];
+    // Load the node if it hasn't been loaded due to a missing wildcard loader.
+    $node = is_numeric($node) ? node_load($node) : $node;
+
     $parent_path = $this->_findParentPath($node);
     if ($parent_path) {
       return array($node->type => $parent_path);
@@ -88,6 +92,9 @@ class _entityreference_CrumbsMultiPlugin_user extends _entityreference_CrumbsMul
    */
   function findParent__user_x($path, $item) {
     $user = $item['map'][1];
+    // Load the user if it hasn't been loaded due to a missing wildcard loader.
+    $user = is_numeric($user) ? user_load($user) : $user;
+
     $parent_path = $this->_findParentCandidates($user);
     if ($parent_path) {
       // TODO: Is 'user' the correct bundle name?
@@ -95,10 +102,3 @@ class _entityreference_CrumbsMultiPlugin_user extends _entityreference_CrumbsMul
     }
   }
 }
-
-
-
-
-
-
-

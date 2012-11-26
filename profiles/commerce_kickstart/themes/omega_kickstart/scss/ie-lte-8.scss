@@ -13,6 +13,7 @@ img {
 /**
 * Collection page
 */
+.view-collection-products .view-header,
 .view-collection-taxonomy-term .view-header {
   height: auto;
 }
@@ -34,7 +35,7 @@ img {
 * 5.3. Product page
 **********************************************/
 /* Cloud zoom */
-.node-product-type .commerce-product-field .cloud-zoom-container {
+.node-product-type .cloud-zoom-container {
   margin-left: 130px;
   position: relative;
 

@@ -21,16 +21,30 @@ function jirafe_synchronize() {
   );
 
   // By default, create a single site and a single user.
-  $jirafe_resources['sites'][] = array(
+  $jirafe_resources_sites = array(
     'url' => $GLOBALS['base_url'],
     'description' => t('Main site'),
     'timezone' => date_default_timezone_get(),
     'currency' => commerce_default_currency(),
   );
-  $jirafe_resources['users'][] = array(
+
+  $jirafe_resources_users = array(
     'email' => variable_get('site_mail', ini_get('sendmail_from')),
     'first_name' => 'admin',
   );
+
+  if (!empty($config['sites'][0])) {
+    $existing_sites = $config['sites'][0];
+    $jirafe_resources_sites = array_merge($jirafe_resources_sites, $existing_sites);
+  }
+
+  if (!empty($config['users'][0])) {
+    $existing_users = $config['users'][0];
+    $jirafe_resources_users = array_merge($jirafe_resources_users, $existing_users);
+  }
+
+  $jirafe_resources['sites'][] = $jirafe_resources_sites;
+  $jirafe_resources['users'][] = $jirafe_resources_users;
 
   // Allow other modules to alter the resources.
   drupal_alter('jirafe_resources', $jirafe_resources, $config);
@@ -38,7 +52,12 @@ function jirafe_synchronize() {
   // Synchronize with Jirafe.
   $client = new Jirafe_Client($config['token']);
   try {
-    $result = $client->applications($config['app_id'])->resources()->sync($jirafe_resources['sites'], $jirafe_resources['users']);
+    $additional_parameters =     array(
+       'platform_type' => 'drupal',
+       'platform_version' => '1.0.0',
+       'plugin_version' => '0.1.0',
+      );
+    $result = $client->applications($config['app_id'])->resources()->sync($jirafe_resources['sites'], $jirafe_resources['users'], $additional_parameters);
   }
   catch(Jirafe_Exception $exception) {
     watchdog('jirafe', $exception->getMessage());

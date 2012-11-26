@@ -39,6 +39,7 @@ function commerce_addressbook_menu() {
   $items['user/%user/addressbook'] = array(
     'title' => 'Address Book',
     'page callback' => 'commerce_addressbook_page',
+    'page arguments' => array(1),
     'access callback' => 'commerce_addressbook_page_access',
     'type' => MENU_LOCAL_TASK,
     'file' => 'includes/commerce_addressbook.user.inc',

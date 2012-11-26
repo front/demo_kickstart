@@ -133,10 +133,6 @@ function commerce_shipping_pane_checkout_form($form, &$form_state, $checkout_pan
       '#value' => FALSE,
     );
   }
-  // Display a message if there's No Shipping method enabled. 
-  else {
-    drupal_set_message(t('The shipping pane is empty because a <a href="@shipping_method_link">shipping method</a> hasn\'t been enabled. Another option is to <a href="@checkout_settings_link">remove the pane</a> completely by dragging the "Shipping" pane to the "Disable" section of the checkout process.', array('@shipping_method_link' => url('admin/commerce/config/shipping/methods'), '@checkout_settings_link' => url('admin/commerce/config/checkout'))));
-  }
 
   return $pane_form;
 }

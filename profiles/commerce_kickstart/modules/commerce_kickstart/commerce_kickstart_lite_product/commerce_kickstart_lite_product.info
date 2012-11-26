@@ -13,32 +13,28 @@ dependencies[] = commerce_price
 dependencies[] = commerce_product
 dependencies[] = commerce_product_reference
 dependencies[] = commerce_product_ui
-dependencies[] = facetapi
 dependencies[] = features
 dependencies[] = image
 dependencies[] = image_delta_formatter
 dependencies[] = inline_entity_form
 dependencies[] = menu
 dependencies[] = options
-dependencies[] = search_api
-dependencies[] = search_api_facetapi
-dependencies[] = search_api_views
 dependencies[] = strongarm
 dependencies[] = taxonomy
 features[commerce_product_type][] = product
-features[ctools][] = facetapi:facetapi_defaults:1
 features[ctools][] = strongarm:strongarm:1
 features[features_api][] = api:1
 features[field][] = commerce_product-product-commerce_price
 features[field][] = commerce_product-product-field_images
+features[field][] = commerce_product-product-title_field
 features[field][] = node-product_display-body
 features[field][] = node-product_display-field_product
 features[field][] = node-product_display-field_product_category
+features[field][] = node-product_display-title_field
 features[image][] = product_full
 features[image][] = product_medium
 features[image][] = product_thumbnail
 features[node][] = product_display
-features[search_api_index][] = product_display
 features[taxonomy][] = product_category
 features[variable][] = comment_product_display
 features[variable][] = comment_subject_field_product_display
@@ -53,9 +49,9 @@ features[variable][] = pathauto_punctuation_hyphen
 features[variable][] = pathauto_taxonomy_term_pattern
 files[] = commerce_kickstart_lite_product.migrate.inc
 
-; Information added by drupal.org packaging script on 2012-09-17
-version = "7.x-2.0-rc1"
+; Information added by drupal.org packaging script on 2012-11-09
+version = "7.x-2.0-rc4"
 core = "7.x"
 project = "commerce_kickstart"
-datestamp = "1347893544"
+datestamp = "1352471460"
 

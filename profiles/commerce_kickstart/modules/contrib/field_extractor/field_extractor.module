@@ -182,9 +182,14 @@ function field_extractor_field_formatter_view($entity_type, $entity, $field, $in
   if (empty($entity_ids)) {
     return array();
   }
+  // Retrieve the weight and the label from the view mode settings.
+  $instance_display = array(
+    'label' => $display['label'],
+    'weight' => $display['weight'],
+  );
 
   $entities = entity_load($settings['entity_type'], $entity_ids);
-  return field_extractor_build_element($entities, $settings['entity_type'], $extractor_settings);
+  return field_extractor_build_element($entities, $settings['entity_type'], $extractor_settings, $instance_display);
 }
 
 /**
@@ -196,8 +201,11 @@ function field_extractor_field_formatter_view($entity_type, $entity, $field, $in
  *   The type of passed $entities.
  * @param $extractor_settings
  *   An array of settings ('field_name', 'formatter', 'settings', 'langcode').
+ * @param $instance_display
+ *   The display settings to use, as found in the 'display' entry of instance
+ *   definitions.
  */
-function field_extractor_build_element($entities, $entity_type, $extractor_settings) {
+function field_extractor_build_element($entities, $entity_type, $extractor_settings, $instance_display = array()) {
   $field_name = $extractor_settings['field_name'];
   $formatter_name = $extractor_settings['formatter'];
   $formatter_settings = $extractor_settings['settings'];
@@ -206,7 +214,7 @@ function field_extractor_build_element($entities, $entity_type, $extractor_setti
   foreach ($entities as $loaded_entity) {
     if (!empty($loaded_entity->{$field_name})) {
       $formatter = field_info_formatter_types($formatter_name);
-      $field_display = array(
+      $field_display = $instance_display + array(
         'label' => 'hidden',
         'type' => $formatter_name,
         'settings' => $formatter_settings + $formatter['settings'],

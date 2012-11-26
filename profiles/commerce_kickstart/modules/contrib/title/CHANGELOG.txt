@@ -1,6 +1,9 @@
 
 Title 7.x-1.x, xxxx-xx-xx
 -------------------------
+#1808454 by plach: Fixed help and permissions for the admin settings.
+#1835486 by plach: Fixed Automated tests are failing.
+#1808454 by peximo: Overhauled the admin settings form.
 #1773514 by peximo: Added Module's configuration page.
 #1396450 by logaritmisk, plach | mgifford: Fixed Notice: Undefined index:
   fieldable in title_entity_info_alter() (line 28 of title/title.module).

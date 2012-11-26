@@ -110,7 +110,7 @@ function jirafe_page_alter(&$page) {
   if ($term = menu_get_object('taxonomy_term', 2)) {
     $vocabularies = _jirafe_get_vocabularies();
     if (in_array($term->vocabulary_machine_name, $vocabularies)) {
-      $data['category'] = array(
+      $jirafe_tracking_data['category'] = array(
         'name' => $term->name,
       );
     }
@@ -124,16 +124,19 @@ function jirafe_page_alter(&$page) {
           $product = commerce_product_load($node->{$product_reference['field_name']}[LANGUAGE_NONE][0]['product_id']);
         }
       }
-      $price = entity_metadata_wrapper('commerce_product', $product)->commerce_price->value();
-      $ammount = commerce_currency_amount_to_decimal($price['amount'], '');
-      $currency = commerce_currency_load();
-      $clean_price = number_format(commerce_currency_round(abs($ammount), $currency), $currency['decimals'], $currency['decimal_separator'], $currency['thousands_separator']);
+      // Don't try to look for the product data if there is no product attached.
+      if ($product) {
+        $price = entity_metadata_wrapper('commerce_product', $product)->commerce_price->value();
+        $ammount = commerce_currency_amount_to_decimal($price['amount'], '');
+        $currency = commerce_currency_load();
+        $clean_price = number_format(commerce_currency_round(abs($ammount), $currency), $currency['decimals'], $currency['decimal_separator'], $currency['thousands_separator']);
 
-      $data['product'] = array(
-        'sku' => $product->sku,
-        'name' => $node->title,
-        'price' => $clean_price,
-      );
+        $jirafe_tracking_data['product'] = array(
+          'sku' => $product->sku,
+          'name' => $node->title,
+          'price' => $clean_price,
+        );
+      }
     }
   }
   drupal_alter('jirafe_tracking_data', $jirafe_tracking_data, $page);
@@ -232,7 +235,7 @@ function jirafe_commerce_kickstart_service_provider() {
       'requirements' => t('Requires application token and ID to be set.'),
       'requirements_callback' => 'jirafe_commerce_kickstart_service_provider_requirements',
       'link' => 'http://jirafe.com',
-      'installation_proccess' => t('1. Create your Jirafe account at the Commerce Guys !marketplace.<br />2. Fill in your application ID and token !configuration_link.', array('!marketplace' => l('Marketplace', url('https://marketplace.commerceguys.com/service/jirafe-free-subscription')), '!configuration_link' => l('here', 'admin/commerce/config/jirafe'))),
+      'installation_proccess' => t('1. Create your Jirafe account at the Commerce Guys !marketplace.<br />2. Fill in your application ID and token !configuration_link.', array('!marketplace' => l('Marketplace', url('https://marketplace.commerceguys.com/service/jirafe')), '!configuration_link' => l('here', 'admin/commerce/config/jirafe'))),
     ),
   );
 }

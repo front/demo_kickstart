@@ -33,6 +33,7 @@ function commerce_customer_profile_pane_settings_form($checkout_pane) {
     '#options' => $options,
     '#empty_value' => '',
     '#default_value' => variable_get('commerce_' . $checkout_pane['pane_id'] . '_field', ''),
+    '#required' => TRUE,
   );
 
   // Provide the option to copy values from other profile types if they exist.
@@ -42,27 +43,31 @@ function commerce_customer_profile_pane_settings_form($checkout_pane) {
   if (count($profile_types)) {
     $form['commerce_' . $checkout_pane['pane_id'] . '_profile_copy'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Allow this profile to use values from another profile, where applicable.'),
-      '#description' => t('For example, use the shipping information as the billing information.'),
+      '#title' => t('Enable profile copying on this checkout pane, helping customers avoid having to enter the same address twice.'),
       '#default_value' => variable_get('commerce_' . $checkout_pane['pane_id'] . '_profile_copy', FALSE),
     );
 
-    $form['commerce_' . $checkout_pane['pane_id'] . '_profile_copy_source'] = array(
-      '#type' => 'select',
-      '#title' => t('Source of profile information'),
-      '#options' => $profile_types,
-      '#default_value' => variable_get('commerce_' . $checkout_pane['pane_id'] . '_profile_copy_source', NULL),
+    $form['commerce_' . $checkout_pane['pane_id'] . '_profile_copy_wrapper'] = array(
+      '#type' => 'fieldset',
+      '#title' => t('Profile copy options'),
       '#states' => array(
         'visible' => array(
           ':input[name="commerce_' . $checkout_pane['pane_id'] . '_profile_copy"]' => array('checked' => TRUE),
         ),
       ),
     );
-    $form['commerce_' . $checkout_pane['pane_id'] . '_profile_copy_default'] = array(
+
+    $form['commerce_' . $checkout_pane['pane_id'] . '_profile_copy_wrapper']['commerce_' . $checkout_pane['pane_id'] . '_profile_copy_source'] = array(
+      '#type' => 'select',
+      '#title' => t('Profile to copy from'),
+      '#options' => $profile_types,
+      '#default_value' => variable_get('commerce_' . $checkout_pane['pane_id'] . '_profile_copy_source', NULL),
+    );
+
+    $form['commerce_' . $checkout_pane['pane_id'] . '_profile_copy_wrapper']['commerce_' . $checkout_pane['pane_id'] . '_profile_copy_default'] = array(
       '#type' => 'checkbox',
-      '#title' => t('Copy option enabled by default?'),
-      '#description' => t('Default copy checkbox state.'),
-      '#default_value' => variable_get('commerce_' . $checkout_pane['pane_id'] . '_profile_copy_default', FALSE),
+      '#title' => t('Make copying information from this profile the default action, requiring users to uncheck a box on the checkout pane to enter a different address.'),
+      '#default_value' => variable_get('commerce_' . $checkout_pane['pane_id'] . '_profile_copy_default', TRUE),
     );
   }
 
@@ -116,7 +121,8 @@ function commerce_customer_profile_pane_checkout_form($form, &$form_state, $chec
   // customer profile, add a checkbox to allow users to toggle this.
   if (variable_get('commerce_' . $checkout_pane['pane_id'] . '_profile_copy', FALSE)
     && $source_profile_type_name = variable_get('commerce_' . $checkout_pane['pane_id'] . '_profile_copy_source', NULL)) {
-		$profile_copy_default = variable_get('commerce_' . $checkout_pane['pane_id'] . '_profile_copy_default', FALSE);
+    // Load the default profile copy option from settings.
+    $profile_copy_default = variable_get('commerce_' . $checkout_pane['pane_id'] . '_profile_copy_default', FALSE);
 
     // Make sure our profile type still exists..
     if ($source_profile_type = commerce_customer_profile_type_load($source_profile_type_name)) {
@@ -143,7 +149,7 @@ function commerce_customer_profile_pane_checkout_form($form, &$form_state, $chec
 
       // If the order data has reference to fields that were copied over, hide
       // them so we don't confuse the user by still allowing them to edit values.
-      if (!empty($order->data['profile_copy'][$checkout_pane['pane_id']]['status']) && (isset($order->data['profile_copy'][$checkout_pane['pane_id']]['elements']))) {
+      if (!empty($order->data['profile_copy'][$checkout_pane['pane_id']]['status']) && isset($order->data['profile_copy'][$checkout_pane['pane_id']]['elements'])) {
         foreach ($order->data['profile_copy'][$checkout_pane['pane_id']]['elements'] as $field_name => $field) {
           foreach ($field as $langcode => $items) {
             foreach ($items as $delta => $item) {
@@ -152,13 +158,14 @@ function commerce_customer_profile_pane_checkout_form($form, &$form_state, $chec
           }
         }
       }
-      // Default copy address option
-      elseif (empty($form_state['build_info']['args'][0]->data) && $profile_copy_default) {
-        foreach ($pane_form as $field_name => $field) {
-          if(strpos($field_name, '#') !== 0 && $field_name != 'customer_profile') {
-            if(isset($pane_form[$field_name]['#language'])) {
-              $pane_form[$field_name][$pane_form[$field_name]['#language']][0]['#access'] = FALSE;
-            }
+      // If profile copy action has not been set and the default action TRUE.
+      elseif (empty($order->data['profile_copy']) && $profile_copy_default) {
+        // Get field names that will be copied from the source profile.
+        foreach (field_info_instances('commerce_customer_profile', $source_profile_type['type']) as $field_name => $field) {
+          $langcode = $pane_form[$field_name]['#language'];
+          // If the field exists on the destination profile then disable it.
+          if(!empty($pane_form[$field_name])){
+            $pane_form[$field_name][$langcode]['#access'] = FALSE;
           }
         }
       }

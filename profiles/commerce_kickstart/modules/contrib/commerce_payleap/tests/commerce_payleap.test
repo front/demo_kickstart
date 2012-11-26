@@ -61,11 +61,12 @@ class CommercePayleapTest extends CommerceBaseTestCase {
       'MagData' => '',
       'NameOnCard' => $billing_data['name_on_card'],
       'InvNum' => $this->order->order_number,
-      'STREET' => $billing_data['street'],
+      'Street' => $billing_data['street'],
       'Zip' => $billing_data['zip'],
       'ExtData' => $billing_data['ext_data'],
     );
   }
+
   /**
    *  Return an array with Payleap settings
    */
@@ -103,14 +104,12 @@ class CommercePayleapTest extends CommerceBaseTestCase {
     $response = commerce_payleap_request($payment_method, $info);
 
     $this->assertTrue($response['status']);
-
   }
 
- /**
+  /**
    * Test the Payleap Auth transaction.
    */
   public function testCommercePayleapAuthTransaction() {
-
     $user = $this->store_customer;
     // Log in as normal user.
     $this->drupalLogin($user);
@@ -125,7 +124,39 @@ class CommercePayleapTest extends CommerceBaseTestCase {
     $response = commerce_payleap_request($payment_method, $info);
 
     $this->assertTrue($response['status']);
+  }
 
+  public function testCommercePayleapCardonFileTranscation() {
+    $user = $this->store_customer;
+    // Log in as normal user.
+    $this->drupalLogin($user);
+
+    // Create a billing profile.
+    $address_info = array(
+      'commerce_customer_address' => array(
+        'first_name' => $this->randomName(),
+        'last_name' => $this->randomName(),
+        'organisation_name' => $this->randomName(),
+      ),
+    );
+    $profile = $this->createDummyCustomerProfile('billing', $user->uid, $address_info);
+
+    $product = $this->createDummyProduct($this->randomName(), $this->randomName(), 2, 'USD', $this->store_admin->uid);
+    $this->order = $this->createDummyOrder($user->uid, array($product->product_id => 20), 'cart', $profile->profile_id);
+    // Generate random information, as city, postal code, etc.
+    $payment_method = $this->getPayleapSettings(PAYLEAP_TXN_TYPE_RECURRING_CAPTURE);
+    $info = $this->createDummyCreditCardInfo($this->order, 'Sale', '4444424444444440');
+    // Create Customer Profile.
+    $profile_response = commerce_payleap_customer_profile_request($payment_method, $this->order, array(), 'Add');
+    if ($this->assertNotEqual(FALSE, $profile_response['status'])) {
+      $info['CustomerKey'] = (string) $profile_response['xml']->CustomerKey;
+      // Create CreditCardInfo.
+      $card_response = commerce_payleap_card_profile_request($payment_method, $info, 'Add');
+      if ($this->assertNotEqual(FALSE, $card_response['status'])) {
+        $info['CcInfoKey'] = (string) $card_response['xml']->CcInfoKey;
+        $response = commerce_payleap_request($payment_method, $info);
+        $this->assertTrue($response['status']);
+      }
+    }
   }
 }
-

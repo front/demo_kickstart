@@ -23,3 +23,27 @@ function omega_kickstart_preprocess_html(&$variables) {
   drupal_add_css($theme_path . '/css/ie-lte-8.css', array('group' => CSS_THEME, 'weight' => 20, 'browsers' => array('IE' => 'lte IE 8', '!IE' => FALSE), 'preprocess' => FALSE));
   drupal_add_css($theme_path . '/css/ie-lte-7.css', array('group' => CSS_THEME, 'weight' => 21, 'browsers' => array('IE' => 'lte IE 7', '!IE' => FALSE), 'preprocess' => FALSE));
 }
+
+/**
+ * Implements hook_css_alter().
+ * TODO: Remove the function when patch will be applied to omega.
+ * http://drupal.org/node/1784780
+ */
+function omega_kickstart_css_alter(&$css) {
+  foreach($css as $key => $item) {
+    if (isset($item['basename']) && LANGUAGE_RTL) {
+      $css[$item['basename']]['basename'] = 'RTL::' . $item['basename'];
+    }
+  }
+}
+
+/**
+ * Preprocess field.
+ */
+function omega_kickstart_preprocess_field(&$variables) {
+  $element = $variables['element'];
+  if ($element['#entity_type'] != 'node' || $element['#field_name'] != 'title_field') {
+    return;
+  }
+  $variables['theme_hook_suggestions'][] = 'field__fences_h2__node';
+}
